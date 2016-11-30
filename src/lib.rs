@@ -63,11 +63,8 @@ pub struct Tm {
 }
 
 impl Tm {
-
     pub fn new() -> Self {
-        Tm {
-            ..Default::default() 
-        }
+        Tm { ..Default::default() }
     }
 
     pub fn gmtime(t: Seconds) -> Self {
@@ -82,49 +79,46 @@ impl Tm {
         tm.tm_hour = (seconds / 3600) as i32;
         tm.tm_min = (seconds / 60 % 60) as i32;
         tm.tm_sec = (seconds % 60) as i32;
-        
+
         tm.tm_wday = ((days + 3) % 7) as i32;  // Mar 1, 2000 was a Wednesday (3)
         if tm.tm_wday < 0 {
             tm.tm_wday += 7;
         }
-        println!("days = {}", days);
-        
+
         let mut qc_cycles = days / DAYS_PER_400Y;
         days %= DAYS_PER_400Y;
         if days < 0 {
             days += DAYS_PER_400Y;
             qc_cycles -= 1;
         }
-        
+
         let mut c_cycles = days / DAYS_PER_100Y;
         if c_cycles == 4 {
             c_cycles -= 1;
         }
         days -= c_cycles * DAYS_PER_100Y;
-        
+
         let mut q_cycles = days / DAYS_PER_4Y;
         if q_cycles == 25 {
             q_cycles -= 1;
         }
         days -= q_cycles * DAYS_PER_4Y;
-        
+
         let mut years = days / 365;
         if years == 4 {
             years -= 1;
         }
         days -= years * 365;
-        
+
         let leap = ((years == 0) && ((q_cycles != 0) || (c_cycles == 0))) as i32;
         tm.tm_yday = days + 31 + 28 + leap;
         if tm.tm_yday >= (365 + leap) {
             tm.tm_yday -= 365 + leap;
         }
 
-        println!("days:{} qc_cycles:{} c_cycles:{}, q_cycles:{}", days, qc_cycles, c_cycles, q_cycles);
-        
         // tm_year is the year minus 1900. So 100 corresponds to 2000.
         tm.tm_year = 100 + years + (4 * q_cycles) + (100 * c_cycles) + (400 * qc_cycles);
-        
+
         // Note: days_in_month[0] corresponds to March
         const DAYS_IN_MONTH: [u8; 12] = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, 29];
         let mut month = 0;
@@ -132,31 +126,31 @@ impl Tm {
             days -= DAYS_IN_MONTH[month] as i32;
             month += 1;
         }
-        
+
         tm.tm_mon = month as i32 + 2;
-        println!("month = {}, tm.tm_mon = {}", month, tm.tm_mon);
         if tm.tm_mon >= 12 {
             tm.tm_mon -= 12;
             tm.tm_year += 1;
         }
-        
+
         tm.tm_mday = days + 1;  // Make 1 based
 
         tm
     }
 
     pub fn ctime(&self) -> String {
-         const WEEK_DAY: [&'static str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-         const MONTH: [&'static str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-         
-         format!("{} {} {:2} {:02}:{:02}:{:02} xxx {:04}",
-                 WEEK_DAY[self.tm_wday as usize],
-                 MONTH[self.tm_mon as usize],
-                 self.tm_mday,
-                 self.tm_hour,
-                 self.tm_min,
-                 self.tm_sec,
-                 self.tm_year + 1900)
+        const WEEK_DAY: [&'static str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const MONTH: [&'static str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+                                           "Sep", "Oct", "Nov", "Dec"];
+
+        format!("{} {} {:2} {:02}:{:02}:{:02} xxx {:04}",
+                WEEK_DAY[self.tm_wday as usize],
+                MONTH[self.tm_mon as usize],
+                self.tm_mday,
+                self.tm_hour,
+                self.tm_min,
+                self.tm_sec,
+                self.tm_year + 1900)
     }
 
     // Outputs the time represented by the tm buffer in an ISO compatible format.
@@ -232,7 +226,7 @@ mod tests {
         let mut days_in_month: [i32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         let mut seconds: Seconds = 0;
         let mut wday = 4; // Jan 1, 1970 was a Thursday (4)
-        for year in 1970 .. 2076 {
+        for year in 1970..2076 {
             println!("Testing {}", year);
             let mut yday = 0;
             if year % 4 == 0 {
@@ -240,8 +234,8 @@ mod tests {
             } else {
                 days_in_month[1] = 28;
             }
-            for month in 0 .. 12 {
-                for mday in 1 .. days_in_month[month] + 1 {
+            for month in 0..12 {
+                for mday in 1..days_in_month[month] + 1 {
                     let tm = Tm::gmtime(seconds);
 
                     assert_eq!(year, tm.tm_year + 1900);
